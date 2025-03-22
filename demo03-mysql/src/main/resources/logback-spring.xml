@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds">
+
+    <!-- 1. 定义日志格式 -->
+    <property name="CONSOLE_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+
+    <!-- 2. 先定义同步控制台输出器 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <immediateFlush>true</immediateFlush>
+    </appender>
+
+    <!-- 3. 再定义异步包装器，并引用已定义的同步输出器 -->
+    <appender name="ASYNC_CONSOLE" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>1024</queueSize>
+        <appender-ref ref="CONSOLE"/> <!-- 关键：引用已定义的CONSOLE -->
+    </appender>
+
+    <!-- 4. 配置根日志级别 -->
+    <root level="INFO">
+        <appender-ref ref="ASYNC_CONSOLE"/> <!-- 使用异步输出器 -->
+    </root>
+
+</configuration>

@@ -1,0 +1,38 @@
+// 伪代码：轻量级锁竞争失败后的自旋逻辑
+for (int spins = 0; ; spins++) {
+  if (锁已释放) {
+    CAS尝试获取锁;
+    if (成功) break;
+  }
+  if (自旋次数超过阈值 || 系统需要挂起线程) {
+    挂起线程，升级为重量级锁;
+    break;
+  }
+  执行空循环或短暂停顿（基于CPU指令，如PAUSE）;
+}
+
+
+
+
+// 代码片段：自适应自旋的核心逻辑
+int ObjectMonitor::TrySpin(Thread * Self) {
+  // 1. 计算当前允许的自旋次数
+  int spins = Self->adaptive_spin_count();
+
+  // 2. 根据锁的历史状态调整自旋次数
+  if (锁的持有时间较短 && 最近自旋成功) {
+    spins *= 2; // 增加自旋次数
+  } else if (自旋失败率高) {
+    spins = max(spins / 2, 1); // 减少自旋次数
+  }
+
+  // 3. 执行自旋
+  for (int i = 0; i < spins; i++) {
+    if (锁已释放) {
+      return 1; // 自旋成功
+    }
+    // 执行CPU空循环（可能插入PAUSE指令优化）
+    SpinPause();
+  }
+  return 0; // 自旋失败，升级为重量级锁
+}
